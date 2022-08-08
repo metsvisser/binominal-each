@@ -1,0 +1,9 @@
+een|d|een|def=indef;nr=sg;nptype=i|x|
+iedere|d|iedere|def=def;gender=male;nr=sg;nptype=dist|x|
+ieder|d|iedere|def=def;gender=neuter;nr=sg;nptype=dist|x|
+alle|d|alle|nr=pl|x|
+drie|d|drie|nr=pl|x|
+twee|d|twee|nr=pl|x|
+dezelfde|t|dezelfde|def=def|x|
+verschillende|t|verschillende|def=def|x|
+meeste|d|meeste|nr=pl|x|

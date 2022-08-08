@@ -1,0 +1,1 @@
+hebben|heb|heeft|gehad|hebbend|hebben(bezitter)(bezat)|np,bezitter,unify,il,ind;np,bezat,functor,ir,ind

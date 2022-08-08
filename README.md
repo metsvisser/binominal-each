@@ -1,0 +1,5 @@
+This application is an implementation of a part of the thesis I wrote as part of the Research Master in Linguistics. The thesis can be found here. This application is an implementation of the linguistics theory in the Scala programming language. It is best view on a desktop computer using Chrome.
+
+How it works: First you have to describe a situation (also called a model) . You can then enter sentences. The application figures out whether the sentences are true or false in a particular model. For example, if you want to create a situation where Jan has a dog, you select the checkbox next to "dog" under Jan. Then you enter a sentence, for example "Jan has a dog", and you can verify that the sentence is true for that situation. You can then modify the model and enter different sentences.
+
+At the bottom you have a bag of words. Click one of the words to add it to the sentence. On the right there is also a list of example sentences that can be tried out.

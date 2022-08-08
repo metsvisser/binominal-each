@@ -1,0 +1,28 @@
+@(items: Set[(String,String)])
+
+<div class="row">
+
+<div>
+    <h2>Words & Example sentences</h2>
+
+    <div class="row">
+        <div style="width: 50%; display: inline-block; float:left; padding: 20px; text-align: left;" id="lexicalEntries">
+            @for(entry <- items) {
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent word" id="@entry._1">
+                @entry._1
+            </button>
+            }
+        </div>
+        <div style="width: 50%; display: inline-block; float:left; padding: 20px; text-align: left;">
+            <ol>
+                <li><a class="exampleSentence">Jan heeft een hond</a></li>
+                <li><a class="exampleSentence">Een student heeft een kat</a></li>
+                <li><a class="exampleSentence">Twee studenten hebben een spin</a></li>
+                <li><a class="exampleSentence">Klaas heeft een huisdier</a></li>
+            </ol>
+        </div>
+    </div>
+
+</div>
+
+</div>

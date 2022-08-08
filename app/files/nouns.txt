@@ -1,0 +1,4 @@
+student|studenten|student|male
+huisdier|huisdieren|huisdier|neuter
+man|mannen|man|male
+vrouw|vrouwen|vrouw|male

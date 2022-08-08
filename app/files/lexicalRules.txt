@@ -1,0 +1,12 @@
+np|phrase|ps=3rd;nptype=i;nr=sg|
+v|head|x|
+cv|head|x|
+a|head|x|
+d|head|x|
+p|head|x|
+comp|head|x
+coor|head|x
+n|phrase|ps=3rd|
+inf|head|x|
+aux|head|x|
+ppp|head|x|

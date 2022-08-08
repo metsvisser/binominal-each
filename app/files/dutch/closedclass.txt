@@ -1,0 +1,17 @@
+jan|np|jan|x|x
+piet|np|piet|x|x
+klaas|np|klaas|x|x
+de|d|de|def=def;gender=male;nptype=i|x|
+de|d|de|nr=pl;nptype=g|x|
+het|d|het|def=def;gender=neuter;nr=sg;nptype=i|x|
+een|d|eeN|def=indef;nr=sg;nptype=i|x|
+iedere|d|iedere|def=def;gender=male;nr=sg;nptype=dist|x|
+ieder|d|iedere|def=def;gender=neuter;nr=sg;nptype=dist|x|
+alle|d|alle|nr=pl|x|
+geen|d|geen|nr=sg|x|
+drie|d|drie|nr=pl|x|
+twee|d|twee|nr=pl|x|
+dezelfde|t|dezelfde|def=def;gender=male|x|
+verschillende|t|verschillende|def=def;gender=male|x|
+meeste|d|meeste|nr=pl|x|
+en|coor|en|x|x|
