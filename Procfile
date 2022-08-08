@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/binominal-each -Dplay.http.secret.key='VZv`G01c]z@bMc/[A;Y^4T0iCR4:^98IjRMUl54IYDeCE;YGn0:D:3hMGeZUvuMj'
+web: target/universal/stage/bin/binominal-each -Dplay.http.secret.key='VZv`G01c]z@bMc/[A;Y^4T0iCR4:^98IjRMUl54IYDeCE;YGn0:D:3hMGeZUvuMj' -Dhttp.port=${PORT}
