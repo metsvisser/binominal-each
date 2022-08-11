@@ -1,6 +1,6 @@
 package models.stem.nlp.main
 
-import models.stem.nlp.datastructures.semantics.{Filter, ModelEvent, Quant, Sem, SentenceEvent}
+import models.stem.nlp.datastructures.semantics.{Filter, Quant, Sem}
 import models.stem.nlp.datastructures.syntax.{Argument, Feature, GrammarRule, Lexeme}
 import models.stem.nlp.stem.nlp.utils.Utilities
 
@@ -8,7 +8,7 @@ import scala.io.Source
 
 class DutchVocabulary extends Vocabulary {
 
-  override val items: Set[Lexeme] = loadItems
+  override val items: Set[Lexeme] = loadClosedClassItems ++ loadNouns ++ loadAdjs ++ loadVerbs
   override val fixedDenotations: Set[Sem] = loadFixedMeanings
 
   def loadFixedMeanings: Set[Sem] = {
@@ -24,95 +24,73 @@ class DutchVocabulary extends Vocabulary {
   private def getF(value: String): Option[Feature] =
     features.find(value == _.value)
 
-  private def loadItems: Set[Lexeme] = {
-    loadClosedClassItems ++ loadOpenClassItems
-  }
-
   private def loadClosedClassItems: Set[Lexeme] = {
-    val vocabItems = for (line <- Source.fromFile("app/files/closedclass.txt").getLines().toList) yield {
+    val bufferedSource = scala.io.Source.fromFile("app/files/closedclass.txt")
+    val vocabItems = bufferedSource.getLines().map { line =>
       val ar: Array[String] = line.split('|')
-      val word: String = ar(0)
-      val pos: String = ar(1)
-      val featureString: String = ar(3)
-      val features: Set[Feature] = Utilities.processFeatures(featureString, this.features)
-      val item: Lexeme = Lexeme(word, word, pos, features)
-      addFeatures(item)
-      addArguments(item)
+      Lexeme(ar(0), ar(0), ar(1), Utilities.processFeatures(ar(3)).intersect(features))
+        .addFeatures(lexicalRules)
+        .addArguments(grammarRules)
     }
-    vocabItems.toSet
-  }
-
-  private def loadOpenClassItems: Set[Lexeme] = {
-    loadNouns ++ loadAdjs ++ loadVerbs
+    val vocabItemSet = vocabItems.toSet
+    bufferedSource.close()
+    vocabItemSet
   }
 
   private def loadNouns: Set[Lexeme] = {
-    val nouns = for (line <- Source.fromFile("app/files/nouns.txt").getLines().toList) yield {
+    val bufferedSource = scala.io.Source.fromFile("app/files/nouns.txt")
+    val nouns = bufferedSource.getLines().flatMap { line =>
       val vocab: Array[String] = line.split('|')
-      val cat: String = "n"
-      val sgword: String = vocab(0)
-      val plword: String = vocab(1)
-      val geslacht: String = vocab(3)
-      val sgLexeme: Lexeme = Lexeme(sgword, sgword, cat, Set(getF("sg"), getF(geslacht)).flatten)
-      val plLexeme: Lexeme = Lexeme(plword, sgword, cat, Set(getF("pl"), getF(geslacht)).flatten)
-      List(sgLexeme, plLexeme).map(addFeatures)
+      val sgLexeme: Lexeme = Lexeme(vocab(0), vocab(0), "n", Set(getF("sg"), getF(vocab(3))).flatten)
+      val plLexeme: Lexeme = Lexeme(vocab(1), vocab(0), "n", Set(getF("pl"), getF(vocab(3))).flatten)
+      List(sgLexeme, plLexeme).map(_.addFeatures(lexicalRules))
     }
-    nouns.flatten.toSet
+    val nounSet = nouns.toSet
+    bufferedSource.close()
+    nounSet
   }
 
   private def loadAdjs: Set[Lexeme] = {
-    val adjs = for (line <- Source.fromFile("app/files/adjectives.txt").getLines().toList) yield {
+    val bufferedSource = scala.io.Source.fromFile("app/files/adjectives.txt")
+    val adjs = bufferedSource.getLines().flatMap { line =>
       val vocab: Array[String] = line.split('|')
-      val cat: String = "a"
-      val zonder: String = vocab(0)
-      val zonderLexeme: String = vocab(1)
-      val metLexeme: String = vocab(2)
-      val zon: Lexeme = Lexeme(zonderLexeme, zonder, cat, Set(getF("indef"), getF("neuter"), getF("sg")).flatten)
-      val met1: Lexeme = Lexeme(metLexeme, zonder, cat, Set(getF("def"), getF("neuter"), getF("sg")).flatten)
-      val met2: Lexeme = Lexeme(metLexeme, zonder, cat, Set(getF("male"), getF("sg")).flatten)
-      val met3: Lexeme = Lexeme(metLexeme, zonder, cat, Set(getF("pl")).flatten)
-      List(zon, met1, met2, met3).map(addFeatures)
+      val zon: Lexeme = Lexeme(vocab(1), vocab(0), "a", Set(getF("indef"), getF("neuter"), getF("sg")).flatten)
+      val met1: Lexeme = Lexeme(vocab(2), vocab(0), "a", Set(getF("def"), getF("neuter"), getF("sg")).flatten)
+      val met2: Lexeme = Lexeme(vocab(2), vocab(0), "a", Set(getF("male"), getF("sg")).flatten)
+      val met3: Lexeme = Lexeme(vocab(2), vocab(0), "a", Set(getF("pl")).flatten)
+      List(zon, met1, met2, met3).map(_.addFeatures(lexicalRules))
     }
-    adjs.flatten.toSet
+    val adjSet = adjs.toSet
+    bufferedSource.close()
+    adjSet
   }
 
   private def loadVerbs: Set[Lexeme] = {
-    val verbs = for (line <- Source.fromFile("app/files/verbs.txt").getLines().toList) yield {
+    val bufferedSource = scala.io.Source.fromFile("app/files/verbs.txt")
+    val verbs = bufferedSource.getLines().flatMap { line =>
       val vocab: Array[String] = line.split('|')
-      val cat: String = "v"
-      val wij: String = vocab(0)
-      val hij: String = vocab(2)
-      val roleString: String = vocab(6)
-      val rolesArray = roleString.split(';')
+      val rolesArray = vocab(6).split(';')
       val roles: Set[Argument] = (for (role <- rolesArray) yield {
         val fields = role.split(',')
-        val pos = fields(0)
-        val name = fields(1)
-        val unify = fields(2)
-        val position = fields(3)
-        val distribution = fields(4)
-        Argument("v", pos, "v", unify, position, distribution, name)
+        Argument("v", fields(0), "v", fields(2), fields(3), fields(4), fields(1))
       }).toSet
-      val hijLexeme: Lexeme = Lexeme(hij, wij, cat, Set(getF("3rd"), getF("sg"), getF("ind")).flatten, roles)
-      val wijLexeme: Lexeme = Lexeme(wij, wij, cat, Set(getF("pl"), getF("ind")).flatten, roles)
-      List(hijLexeme, wijLexeme).map(addFeatures)
+      val hijLexeme: Lexeme = Lexeme(vocab(2), vocab(0), "v", Set(getF("3rd"), getF("sg"), getF("ind")).flatten, roles)
+      val wijLexeme: Lexeme = Lexeme(vocab(0), vocab(0), "v", Set(getF("pl"), getF("ind")).flatten, roles)
+      List(hijLexeme, wijLexeme).map(_.addFeatures(lexicalRules))
     }
-    verbs.flatten.toSet
+    val verbSet = verbs.toSet
+    bufferedSource.close()
+    verbSet
   }
 
   override def loadGrammarRules: Set[GrammarRule] = {
-    val grammarRules = for (line <- Source.fromFile("app/files/grammarRules.txt").getLines().toList) yield {
-
+    val bufferedSource = scala.io.Source.fromFile("app/files/grammarRules.txt")
+    val grammarRules = bufferedSource.getLines().map { line =>
       val ar: Array[String] = line.split('|')
-      val f: String = ar(0)
-      val a: String = ar(1)
-      val r: String = ar(2)
-      val unify: String = ar(3)
-      val position: String = ar(4)
-      val rule: GrammarRule = GrammarRule(f, a, r, unify, position)
-      rule
+      GrammarRule(ar(0), ar(1), ar(2), ar(3), ar(4))
     }
-    grammarRules.toSet
+    val grammerRulesSet = grammarRules.toSet
+    bufferedSource.close()
+    grammerRulesSet
   }
-
 }

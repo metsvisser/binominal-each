@@ -1,5 +1,0 @@
-kamer|kamers|kamer|male
-student|studenten|student|male
-man|mannen|man|male
-vrouw|vrouwen|vrouw|male
-taal|talen|taal|male

@@ -1,5 +1,0 @@
-d|n|np|unify|ir|F(A)
-a|n|n|unify|ir|en(F,A)
-t|n|n|unify|ir|F(A)
-v|np|v|functor|il|F(A)
-v|np|v|functor|ir|F(A)

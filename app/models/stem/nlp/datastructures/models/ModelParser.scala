@@ -20,9 +20,7 @@ class ModelParser {
     // Create entities and pets for every pet
     val petEntities: Set[Sem]= pets.map(_+"1").map(n => Entity(n, n))
     val petPreds: Set[Sem] = pets.map(n => Pred(n,Set(n)))
-
     val huisdier = Pred("huisdier", pets)
-
 
     // for Event denotations, extract the info from the input model
     val conjunction: Conj = for {
@@ -33,16 +31,13 @@ class ModelParser {
     }
     val hebben = ModelEvent("hebben", conjunction)
 
-    val rest: Set[Sem] = Set(huisdier, man, woman, student, hebben)
+    personEntities.union(petEntities).union(petPreds).union(Set(huisdier, man, woman, student, hebben))
 
-    val model: Set[Sem] = personEntities.union(petEntities).union(petPreds).union(rest)
-    model
   }
 
   def convertQueryString(querystring: Map[String, Seq[String]]): (Set[Person],Set[String]) = {
     val pets: Set[String]=querystring.get("pets").fold(Set.empty[String])(p => p(0).split(",").toSet)
     val names: Set[String]=querystring.keySet.filter(_.contains("name")).map( s => s.substring(0, s.indexOf('-')))
-//    names.foreach(p => println(p+"+++"))
     val people:Set[Person]=for {
       name <- names
     } yield {
@@ -51,9 +46,6 @@ class ModelParser {
         querystring.get(name+"-student").fold(false)((p: Seq[String]) => p(0).toBoolean),
         querystring.keySet.filter(_.contains(name+"-owns-")).map( s => s.substring(s.lastIndexOf("-")+1)))
     }
-    people.foreach(p => println("person: "+p))
-//    println("METSSS"+pets)
-//    println("METSSS"+people)
     (people, pets)
   }
 

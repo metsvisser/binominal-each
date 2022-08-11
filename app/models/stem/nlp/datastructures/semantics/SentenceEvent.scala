@@ -4,13 +4,13 @@ import models.stem.nlp.Conj
 import models.stem.nlp.datastructures.syntax.Argument
 
 case class SentenceEvent(name: String,
-                         eventDisjunction: Set[Set[Map[String, Set[String]]]],
-                         filter: Option[Set[Set[Map[String, Set[String]]]] => Boolean] = None
+                         eventDisjunction: Set[Conj],
+                         filter: Option[Set[Conj] => Boolean] = None
                         ) extends ((Entity, Argument) => SentenceEvent) with Sem {
 
   def crossCollConjunctionWithEventDisjunction(conjunction: Set[String],
-                                               eventDisjunction: Set[Set[Map[String, Set[String]]]],
-                                               role: Argument): Set[Set[Map[String, Set[String]]]] = {
+                                               eventDisjunction: Set[Conj],
+                                               role: Argument): Set[Conj] = {
     for {
       eventConjunction <- eventDisjunction
     } yield {
@@ -19,8 +19,8 @@ case class SentenceEvent(name: String,
   }
 
   def crossCollConjunctionWithEventConjunction(conjunction: Set[String],
-                                               eventConjunction: Set[Map[String, Set[String]]],
-                                               role: Argument): Set[Map[String, Set[String]]] = {
+                                               eventConjunction: Conj,
+                                               role: Argument): Conj = {
     for {
       eventConjunct <- eventConjunction
     } yield {
@@ -42,8 +42,8 @@ case class SentenceEvent(name: String,
 
   def incorporateConjunctIntoEventConjunction(conjunct: String,
                                               eventConjunction: Conj,
-                                              role: Argument): Set[Map[String, Set[String]]] = {
-    val newEventConjunction: Set[Map[String, Set[String]]] = for {
+                                              role: Argument): Conj = {
+    val newEventConjunction: Conj = for {
       eventConjunct <- eventConjunction
     } yield {
       eventConjunct + (role.roleName -> Set(conjunct))
@@ -53,8 +53,8 @@ case class SentenceEvent(name: String,
 
   def incorporateConjunctIntoEventDisjunction(conjunct: String,
                                               eventDisjunction: Set[Conj],
-                                              role: Argument): Set[Set[Map[String, Set[String]]]] = {
-    val eventDisjunctionsPerConjunct: Set[Set[Map[String, Set[String]]]] = for {
+                                              role: Argument): Set[Conj] = {
+    val eventDisjunctionsPerConjunct: Set[Conj] = for {
       eventConjunction <- eventDisjunction
     } yield {
       incorporateConjunctIntoEventConjunction(conjunct, eventConjunction, role)
@@ -62,67 +62,57 @@ case class SentenceEvent(name: String,
     eventDisjunctionsPerConjunct
   }
 
-  def generator(x: List[List[Set[Map[String, Set[String]]]]]): List[List[Set[Map[String, Set[String]]]]] = x match {
+  def generator(x: List[List[Conj]]): List[List[Conj]] = x match {
     case Nil => List(Nil)
     case h :: _ => h.flatMap(i => generator(x.tail).map(i :: _))
   }
 
-  def removeRangeRole(eventConjunction: Set[Map[String, Set[String]]], role: Argument): Set[Map[String, Set[String]]] = {
+  def removeRangeRole(eventConjunction: Conj, role: Argument): Conj = {
     eventConjunction.map { event => event - role.roleName }
   }
 
 
   def crossIndConjunctionWithEventDisjunction(conjunction: Set[String],
-                                              eventDisjunction: Set[Set[Map[String, Set[String]]]],
-                                              role: Argument): Set[Set[Map[String, Set[String]]]] = {
+                                              eventDisjunction: Set[Conj],
+                                              role: Argument): Set[Conj] = {
 
-    val setofEventDisjunctsForOneConjunct: Set[Set[Set[Map[String, Set[String]]]]] = for {
+    val setofEventDisjunctsForOneConjunct: Set[Set[Conj]] = for {
       conjunct <- conjunction
     } yield {
       incorporateConjunctIntoEventDisjunction(conjunct, eventDisjunction, role)
     }
 
-    //    val flattenedSet=setofEventDisjunctsForOneConjunct.flatten
-    //    println("Size of flattened set: "+flattenedSet.size)
-    //    flattenedSet.foreach(p => println("Flattened subset: "+p))
+    val listofEventDisjunctsForOneConjunct: List[List[Conj]] =
+      setofEventDisjunctsForOneConjunct.toList.map(p => p.toList)
 
+    val combineAllPossibleEventDisjuncts: Set[Set[Conj]] =
+      generator(listofEventDisjunctsForOneConjunct).toSet.map((p: List[Conj]) => p.toSet)
 
-    val listofEventDisjunctsForOneConjunct: List[List[Set[Map[String, Set[String]]]]] = setofEventDisjunctsForOneConjunct.toList.map(p => p.toList)
-    val combineAllPossibleEventDisjuncts: Set[Set[Set[Map[String, Set[String]]]]] = generator(listofEventDisjunctsForOneConjunct).toSet.map((p: List[Set[Map[String, Set[String]]]]) => p.toSet)
-    //    println("begintHier: "+combineAllPossibleEventDisjuncts.size)
-    //    combineAllPossibleEventDisjuncts.foreach(p => println("subset: "+p))
-    val combineAllPossibleEventDisjunctsFlattened: Set[Set[Map[String, Set[String]]]] = combineAllPossibleEventDisjuncts.map(_.flatten)
+    val combineAllPossibleEventDisjunctsFlattened: Set[Conj] =
+      combineAllPossibleEventDisjuncts.map(_.flatten)
 
     filter match {
-      case None => {
-        //        println("No filter function found")
+      case None =>
         combineAllPossibleEventDisjunctsFlattened
-      }
-      case Some(filterFunction) => {
-        val combineAllPossibleEventDisjunctsFiltered = combineAllPossibleEventDisjuncts.filter(ec => filterFunction(ec))
-        val combineAllPossibleEventDisjunctsFilteredFlattened: Set[Set[Map[String, Set[String]]]] = combineAllPossibleEventDisjunctsFiltered.map(_.flatten)
-        //        println("FilteredSame: "+combineAllPossibleEventDisjunctsFilteredFlattened.size)
-        //        combineAllPossibleEventDisjunctsFilteredFlattened.foreach(p => println("Same: "+p))
+      case Some(filterFunction) =>
+        val combineAllPossibleEventDisjunctsFiltered =
+          combineAllPossibleEventDisjuncts.filter(ec => filterFunction(ec))
+        val combineAllPossibleEventDisjunctsFilteredFlattened: Set[Conj] =
+          combineAllPossibleEventDisjunctsFiltered.map(_.flatten)
         combineAllPossibleEventDisjunctsFilteredFlattened
-      }
     }
-
-    //    combineAllPossibleEventDisjunctsFlattened
   }
 
 
   def crossIndDisjunctionWithEventDisjunction(disjuncts: Set[Set[String]],
-                                              eventDisjunction: Set[Set[Map[String, Set[String]]]],
+                                              eventDisjunction: Set[Conj],
                                               role: Argument): SentenceEvent = {
-    val tooDeep = for {
+    val newDisjuncts = for {
       conjunction <- disjuncts
     } yield {
       crossIndConjunctionWithEventDisjunction(conjunction, eventDisjunction, role)
     }
-
-    val newEvent = SentenceEvent(name, tooDeep.flatten)
-    //    println("NewEvent: "+newEvent)
-    newEvent
+    SentenceEvent(name, newDisjuncts.flatten)
   }
 
   def apply(e: Entity, role: Argument): SentenceEvent = {
@@ -138,14 +128,13 @@ case class SentenceEvent(name: String,
     e.filter match {
       case None => event
       case Some(filterWithoutRole) => {
-        val newFilter: Set[Set[Map[String, Set[String]]]] => Boolean = filterWithoutRole(role.roleName)
+        val newFilter: Set[Conj] => Boolean = filterWithoutRole(role.roleName)
         SentenceEvent(event.name, event.eventDisjunction, Some(newFilter))
       }
     }
   }
 
   override def toString(): String = {
-    //    println("Number of disjuncts: " + eventDisjunction.size)
     eventDisjunction.mkString("\n")
   }
 }

@@ -17,7 +17,7 @@ class HomeController @Inject()(cc: ControllerComponents,
   val parser = new Parser(dutchLanguage)
 
   def index() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index("titelHoi",
+    Ok(views.html.index("Boniminal each",
       dutchLanguage.vocabulary.items.map(l => (l.word, l.pos))))
   }
 
@@ -32,8 +32,8 @@ class HomeController @Inject()(cc: ControllerComponents,
         zinsem match {
           case Left(x) => Ok(s"Parsing error: ${x.msg}")
           case Right(y) => y match {
-            case Some(tt) => Ok(s"TRUE: $tt")
-            case None => Ok("false!")
+            case Some(tt) => Ok(s"True: $tt")
+            case None => Ok("False")
           }
         }
       case None => Ok("Form not found")

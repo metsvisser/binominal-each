@@ -1,4 +1,4 @@
-np|phrase|ps=3rd;nptype=i;nr=sg|
+np|phrase|ps=3rd;nr=sg|
 v|head|x|
 cv|head|x|
 a|head|x|

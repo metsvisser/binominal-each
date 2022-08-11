@@ -31,9 +31,7 @@ class Parser(language: Language) {
       m <- meaningVocab
       if l.base == m.name
     } yield {
-      val s = Syn(word, l.pos, l.features, l.args)
-      val d = Sign(s, m)
-      d
+      Sign(Syn(word, l.pos, l.features, l.args), m)
     }
   }
 
@@ -46,18 +44,6 @@ class Parser(language: Language) {
       wordToSign(word, vocab, meaningVocab)
     }
     Right(signs)
-
-    // hebben- event krijgt geen Sign toegewezen?
-    // fix ugly
-    //    val (errors, nonErrors) = setOfEithers.partitionMap(identity)
-    //    errors.foreach(e => println(s"Error: ${e.msg}"))
-    //    if (errors.nonEmpty) {
-    //      val bigError = errors.map(s => s.msg).mkString("\n")
-    //      Left(ParsingError(bigError))
-    //    } else {
-    //      Right(nonErrors.flatten)
-    //    }
-
   }
 
 
@@ -66,23 +52,18 @@ class Parser(language: Language) {
     val entities: Set[Sem] = model.collect { case e: Entity => e }
     val namedEntities = entities
       .map(e => Lexeme(e.name, e.name, "np"))
-      .map(e => vocabulary.addFeatures(e))
+      .map(e => e.addFeatures(vocabulary.lexicalRules))
     // neem de preds en voeg die toe aan de SYN en SEM vocabs (staan toch al in de SYN vocab?)
     val preds: Set[Sem] = model.collect { case e: Pred => e }
     val nouns = preds
       .map(e => Lexeme(e.name, e.name, "n"))
-      .map(e => vocabulary.addFeatures(e))
+      .map(e => e.addFeatures(vocabulary.lexicalRules))
     val lexemes = namedEntities ++ nouns
     // neem de events en voeg die toe aan de SEM vocab (staat al in de SYN vocab)
-    val events: Set[Sem] = model.collect{ case e: ModelEvent => e }
-      .map(modelEvent => SentenceEvent(modelEvent.name,Set(Set(Map()))))
-
-
-
+    val events: Set[Sem] = model.collect { case e: ModelEvent => e }
+      .map(modelEvent => SentenceEvent(modelEvent.name, Set(Set(Map()))))
     val denotations: Set[Sem] = entities ++ preds ++ events
-
-
-      (lexemes, denotations)
+    (lexemes, denotations)
   }
 
   def filterSentenceDenotations(parsedSigns: Set[Sign], sentenceLength: Int): Either[ParsingError, SentenceEvent] = {

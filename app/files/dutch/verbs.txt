@@ -1,1 +1,0 @@
-zien|zie|ziet|gezien|ziend|zien(seeer)(seen)|np,seeer,unify,il,ind;np,seen,functor,ir,ind

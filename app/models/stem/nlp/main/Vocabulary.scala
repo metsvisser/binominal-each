@@ -4,8 +4,6 @@ import models.stem.nlp.datastructures.semantics.Sem
 import models.stem.nlp.datastructures.syntax._
 import models.stem.nlp.stem.nlp.utils.Utilities
 
-import scala.io.Source
-
 trait Vocabulary {
 
   val features: Set[Feature] = loadFeatures()
@@ -16,57 +14,40 @@ trait Vocabulary {
 
   def loadGrammarRules: Set[GrammarRule]
 
-
-
   // open class items
   val items: Set[Lexeme]
   // closed class items
   val fixedDenotations: Set[Sem]
 
   private def loadFeatures(): Set[Feature] = {
-    val features = for (line <- Source.fromFile("app/files/dutch/features.txt").getLines().toList) yield {
+    val bufferedSource = scala.io.Source.fromFile("app/files/features.txt")
+    val features = bufferedSource.getLines().map { line =>
       val ar: Array[String] = line.split(" ")
-      val featureString: String = ar(0)
-      val value: String = ar(1)
-      val feature: Feature = Feature(featureString, value)
-      feature
+      Feature(ar(0), ar(1))
     }
-    features.toSet
+    val featureSet = features.toSet
+    bufferedSource.close()
+    featureSet
   }
 
   def splitFeatures(featureSplit: Array[String]): Set[Feature] = {
     if (featureSplit(0).trim().equals("x")) return Set.empty
-    val features: Set[Feature] = (for (feature <- featureSplit) yield {
+    val itemFeatures: Set[Feature] = (for (feature <- featureSplit) yield {
       Feature(feature.split("=")(0), feature.split("=")(1))
     }).toSet
-    features.filter(f => Utilities.matchFeatures(f, features))
+    itemFeatures.intersect(features)
   }
 
   private def loadRules: Set[LexicalRule] = {
-    val rules = for (line <- Source.fromFile("app/files/lexicalRules.txt").getLines().toList) yield {
+    val bufferedSource = scala.io.Source.fromFile("app/files/lexicalRules.txt")
+    val rules = bufferedSource.getLines().map { line =>
       val ar: Array[String] = line.split('|')
-      val pos: String = ar(0)
-      val featureString: String = ar(2)
-      val featureSplit: Array[String] = featureString.split(";")
-      val featuresToBeAdded: Set[Feature] = splitFeatures(featureSplit)
-      val rule: LexicalRule = LexicalRule(pos, featuresToBeAdded)
-      rule
+      val featuresToBeAdded: Set[Feature] = splitFeatures(ar(2).split(";"))
+      LexicalRule(ar(0), featuresToBeAdded)
     }
-    rules.toSet
+    val ruleSet = rules.toSet
+    bufferedSource.close()
+    ruleSet
   }
 
-  def addFeatures(l: Lexeme): Lexeme = {
-    val ruleOpt = lexicalRules.find(p => p.pos == l.pos)
-    ruleOpt.map { rule =>
-      Lexeme(l.word, l.base, l.pos, l.features.union(rule.features), l.args)
-    }
-  }.getOrElse(l)
-
-  def addArguments(l: Lexeme): Lexeme = {
-    val rules = grammarRules.collect{ case rule if rule.functorpos == l.pos => rule }
-    val args = rules.map { rule =>
-      Argument(rule.functorpos, rule.argpos, rule.resultpos, rule.unify, rule.position)
-    }
-    Lexeme(l.word, l.base, l.pos, l.features, args)
-  }
 }

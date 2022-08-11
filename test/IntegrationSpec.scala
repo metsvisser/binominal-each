@@ -51,22 +51,9 @@ class IntegrationSpec extends PlaySpec {
       val either = for {
         recognizedSigns <- parser.convertToSigns(sentenceAsListOfStrings, modelLexemes)
       } yield recognizedSigns
-      println(s"Either is right?: ${either.isRight}")
-      either match {
-        case Left(x) => {
-          println(s"Message:  ${x}")
 
-          println(s"Message:  ${x.msg}")
-          println(s"MessageLength:  ${x.msg.length}")
-
-        }
-        case Right(x) => {
-          println(s"Rightt:  $x")
-        }
-      }
       val denotations = either.getOrElse(Set.empty[Sign])
 
-      denotations.foreach(p => println("DENOTATION: " + p.sem))
       denotations.size mustBe 4
       denotations.map(_.sem).collect { case e: Entity => e }.size mustBe 1
       denotations.map(_.sem).collect { case v: SentenceEvent => v }.size mustBe 1
@@ -76,16 +63,14 @@ class IntegrationSpec extends PlaySpec {
     }
     "apply lexical rules" in {
       val lexeme = Lexeme("jan", "jan", "np")
-      val enriched = dutchLanguage.vocabulary.addFeatures(lexeme)
+      val enriched = lexeme.addFeatures(dutchLanguage.vocabulary.lexicalRules)
 
-      enriched.features.foreach( p => println(s"Feature: ${p}"))
-      enriched.features.size mustBe 3
+      enriched.features.size mustBe 2
     }
     "apply grammar rules" in {
       val lexeme = Lexeme("een", "een", "d")
-      val enriched = dutchLanguage.vocabulary.addArguments(lexeme)
+      val enriched = lexeme.addArguments(dutchLanguage.vocabulary.grammarRules)
 
-      enriched.args.foreach( p => println(s"Grammar rule: ${p}"))
       enriched.args.size mustBe 1
     }
     "convert a verb to a sign" in {
@@ -94,7 +79,7 @@ class IntegrationSpec extends PlaySpec {
       val word = Word("heeft", 0, 1)
       val sign = parser.wordToSign(word,vocab , meanings)
 
-      println(s"Sign is right: ${sign}")
+      sign.size mustBe 1
     }
     "convert a detereminer to a sign and add arguments" in {
       val vocab = dutchLanguage.vocabulary.items ++ modelLexemes._1
@@ -106,7 +91,6 @@ class IntegrationSpec extends PlaySpec {
       sign.head.syn.args.size mustBe 1
       sign.head.syn.args.head mustBe Argument("d","n","np", "unify", "ir")
 
-      println(s"Sign is right: ${sign}")
     }
     "convert a named entity to a sign" in {
       val vocab = dutchLanguage.vocabulary.items ++ modelLexemes._1
@@ -114,7 +98,7 @@ class IntegrationSpec extends PlaySpec {
       val word = Word("jan", 0, 1)
       val sign = parser.wordToSign(word, vocab, meanings)
 
-      println(s"Sign is right: ${sign}")
+      sign.size mustBe 1
     }
     "parse 'een kat'" in {
       val sentenceAsListOfStrings: Array[String] = "een kat".split(" ")
@@ -150,9 +134,6 @@ class IntegrationSpec extends PlaySpec {
       } yield parsedSigns
       val denotations = either.getOrElse(Set.empty[Sign])
 
-      denotations.foreach(p => println("Denot: " + p.sem))
-      denotations.foreach(p => println("Wordsss: " + p.syn.words))
-
       denotations.size mustBe 8
       val setsofWords = denotations.map(_.syn.words)
       val comparisonSet = Set(
@@ -180,7 +161,6 @@ class IntegrationSpec extends PlaySpec {
         sentenceEvent <- parser.filterSentenceDenotations(parsedSigns, sentenceAsListOfStrings.size)
 
       } yield sentenceEvent
-      println("Eventt: "+either.getOrElse(Entity("jan")))
       either.isRight mustBe true
     }
     "compute truth" in {
